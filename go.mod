@@ -1,4 +1,4 @@
-module github.com/Marlliton/ffcmd.git
+module github.com/Marlliton/ffcmd
 
 go 1.25.5
 
