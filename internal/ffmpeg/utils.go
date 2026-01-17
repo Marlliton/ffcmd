@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// fmtDuration formata uma duração de tempo (time.Duration) para o formato de string HH:MM:SS.ms.
+//
+// Formats a time.Duration into an HH:MM:SS.ms string.
 func fmtDuration(d time.Duration) string {
 	h := int(d.Hours())
 	m := int(d.Minutes()) % 60
