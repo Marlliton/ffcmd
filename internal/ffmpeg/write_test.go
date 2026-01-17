@@ -11,7 +11,7 @@ func TestWriteStage(t *testing.T) {
 	in := "video.mp4"
 	out := "out.mp4"
 
-	t.Run("Codecs simples", func(t *testing.T) {
+	t.Run("Codecs", func(t *testing.T) {
 		run(t, []testCase{
 			{
 				name:     "VideoCodec",
@@ -28,6 +28,11 @@ func TestWriteStage(t *testing.T) {
 				builder:  New().Input(in).Output(out).SubtitleCodec("srt"),
 				expected: "ffmpeg -i video.mp4 -c:s srt out.mp4",
 			},
+			{
+				name:     "CodecFor",
+				builder:  New().Input(in).Output(out).CodecFor("v", 0, "libx264"),
+				expected: "ffmpeg -i video.mp4 -c:v:0 libx264 out.mp4",
+			},
 		})
 	})
 
@@ -35,12 +40,12 @@ func TestWriteStage(t *testing.T) {
 		run(t, []testCase{
 			{
 				name:     "CopyVideo",
-				builder:  New().Input(in).Output(out).VideoCodec("copy"),
+				builder:  New().Input(in).Output(out).CopyVideo(),
 				expected: "ffmpeg -i video.mp4 -c:v copy out.mp4",
 			},
 			{
 				name:     "CopyAudio",
-				builder:  New().Input(in).Output(out).AudioCodec("copy"),
+				builder:  New().Input(in).Output(out).CopyAudio(),
 				expected: "ffmpeg -i video.mp4 -c:a copy out.mp4",
 			},
 		})
@@ -56,7 +61,7 @@ func TestWriteStage(t *testing.T) {
 		})
 	})
 
-	t.Run("Definições de tempo de escrita", func(t *testing.T) {
+	t.Run("Definições de tempo", func(t *testing.T) {
 		run(t, []testCase{
 			{
 				name: "Duração de escrita (depois do -i)",
@@ -65,6 +70,22 @@ func TestWriteStage(t *testing.T) {
 					Output("out.mkv").
 					T(22 * time.Second),
 				expected: "ffmpeg -i movie.mkv -t 00:00:22.000 out.mkv",
+			},
+			{
+				name: "seek, procura tempo de vídeo com -ss (depois do -i)",
+				builder: New().
+					Input("movie.mkv").
+					Output("out.mkv").
+					Ss(22 * time.Second),
+				expected: "ffmpeg -i movie.mkv -ss 00:00:22.000 out.mkv",
+			},
+			{
+				name: "Define tempo final absoluto do vídeo (depois do -i)",
+				builder: New().
+					Input("movie.mkv").
+					Output("out.mkv").
+					To(52 * time.Second),
+				expected: "ffmpeg -i movie.mkv -to 00:00:52.000 out.mkv",
 			},
 		})
 	})
