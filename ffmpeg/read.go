@@ -26,7 +26,7 @@ type ReadStage interface {
 	// Filter transiciona para a etapa de filtros da entrada atual.
 	//
 	// Filter transitions to the filter stage for the current input.
-	Filter() FilterStage
+	Filter() filterStage
 
 	// Output define o arquivo de saída e transiciona para o WriteStage.
 	//
@@ -56,7 +56,7 @@ func (c *readCtx) Input(path string) ReadStage {
 	return c
 }
 
-func (c *readCtx) Filter() FilterStage {
+func (c *readCtx) Filter() filterStage {
 	return &filterCtx{c.b}
 }
 

@@ -170,9 +170,9 @@ func (c *writeCtx) Build() string {
 	if len(c.b.filters) > 0 {
 		pipeline := Pipeline{Nodes: c.b.filters}
 		if pipeline.NeedsComplex() {
-			args = append(args, "-filter_complex", pipeline.String())
+			args = append(args, "-filter_complex", fmt.Sprintf("\"%s\"", pipeline.String()))
 		} else {
-			args = append(args, c.b.simpleFilterFlag, pipeline.String())
+			args = append(args, c.b.simpleFilterFlag, fmt.Sprintf("\"%s\"", pipeline.String()))
 		}
 	}
 	args = append(args, c.b.write...)

@@ -1,16 +1,17 @@
 package ffmpeg
 
-type GlobalStage interface {
+type globalStage interface {
 	// Override adiciona a flag global -y.
 	//
 	// Override adds the global -y flag.
-	Override() GlobalStage
+	Override() globalStage
+
 	// LogLevel(level string) GlobalStage
 
 	// Raw adiciona um argumento bruto ao comando FFmpeg, antes do -i
 	//
 	// Raw adds a raw argument to the FFmpeg command, before -i flag
-	Raw(value string) GlobalStage
+	Raw(value string) globalStage
 
 	// Input adiciona um arquivo de entrada (-i) e transiciona para o ReadStage.
 	//
@@ -26,12 +27,12 @@ func (c *globalCtx) Input(path string) ReadStage {
 	return read
 }
 
-func (c *globalCtx) Raw(value string) GlobalStage {
+func (c *globalCtx) Raw(value string) globalStage {
 	c.b.global = append(c.b.global, value)
 	return c
 }
 
-func (c *globalCtx) Override() GlobalStage {
+func (c *globalCtx) Override() globalStage {
 	c.b.global = append(c.b.global, "-y")
 	return c
 }

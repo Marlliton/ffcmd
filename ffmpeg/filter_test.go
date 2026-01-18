@@ -101,13 +101,13 @@ func TestFilterElements(t *testing.T) {
 	t.Run("Pipeline String and NeedsComplex", func(t *testing.T) {
 		tests := []struct {
 			name         string
-			nodes        []Filter
+			nodes        []filter
 			expectedStr  string
 			needsComplex bool
 		}{
 			{
 				name: "Pipeline of simple atomic filters (treated as separate chains)",
-				nodes: []Filter{
+				nodes: []filter{
 					AtomicFilter{Name: scale, Params: []string{"1280", "-1"}},
 					AtomicFilter{Name: "hflip", Params: []string{}},
 				},
@@ -116,7 +116,7 @@ func TestFilterElements(t *testing.T) {
 			},
 			{
 				name: "Pipeline including a complex chain",
-				nodes: []Filter{
+				nodes: []filter{
 					AtomicFilter{Name: "format", Params: []string{"yuv420p"}},
 					Chaing{Inputs: []string{"0:v"}, Filter: AtomicFilter{Name: "fade", Params: []string{"in", "0", "30"}}, Output: "faded_video"},
 					AtomicFilter{Name: "setsar", Params: []string{"1"}},
@@ -126,7 +126,7 @@ func TestFilterElements(t *testing.T) {
 			},
 			{
 				name: "Pipeline of only complex chains",
-				nodes: []Filter{
+				nodes: []filter{
 					Chaing{Inputs: []string{"0:v"}, Filter: AtomicFilter{Name: scale, Params: []string{"640", "-1"}}, Output: "scaled"},
 					Chaing{Inputs: []string{"scaled", "1:v"}, Filter: AtomicFilter{Name: "overlay", Params: []string{"W-w-10:10"}}, Output: "final"},
 				},
@@ -135,7 +135,7 @@ func TestFilterElements(t *testing.T) {
 			},
 			{
 				name:         "Empty pipeline",
-				nodes:        []Filter{},
+				nodes:        []filter{},
 				expectedStr:  "",
 				needsComplex: false,
 			},
@@ -182,7 +182,7 @@ func TestFilterStages(t *testing.T) {
 			sCtx.Add(filter1)
 			sCtx.Add(filter2)
 
-			expectedFilters := []Filter{filter1, filter2} // Now []Filter
+			expectedFilters := []filter{filter1, filter2} // Now []Filter
 			assert.Equal(t, expectedFilters, b.filters)
 		})
 
@@ -215,7 +215,7 @@ func TestFilterStages(t *testing.T) {
 			cCtx.Chaing(chain1.Inputs, chain1.Filter, chain1.Output)
 			cCtx.Chaing(chain2.Inputs, chain2.Filter, chain2.Output)
 
-			expectedFilters := []Filter{chain1, chain2} // Now []Filter
+			expectedFilters := []filter{chain1, chain2} // Now []Filter
 			assert.Equal(t, expectedFilters, b.filters)
 		})
 

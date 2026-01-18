@@ -1,181 +1,183 @@
-# ffcmd - Construtor de Comandos FFmpeg Fluente para Go
+[🇧🇷 Português](./README.pt-br.md)
+
+# ffcmd - Fluent FFmpeg Command Builder for Go
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/Marlliton/ffcmd)](https://goreportcard.com/report/github.com/Marlliton/ffcmd)
 
-`ffcmd` é uma biblioteca Go que fornece uma interface fluente e semântica para construir comandos `ffmpeg` de forma programática. Diga adeus à concatenação de strings e aos erros de ordenamento de flags.
+`ffcmd` is a Go library that provides a fluent and semantic interface for building `ffmpeg` commands programmatically. Say goodbye to string concatenation and flag ordering errors.
 
-## ✨ Recursos
+## ✨ Features
 
-- **API Fluente**: Construa comandos complexos encadeando métodos de forma legível.
-- **Ordem Semântica**: A biblioteca garante a ordem correta das flags do FFmpeg (opções globais, de entrada e de saída).
-- **Filtros Simples e Complexos**: Suporte nativo para `-vf`, `-af` e `-filter_complex` de forma organizada.
-- **Type-Safe**: Evite erros comuns especificando se um filtro simples é para **vídeo** ou **áudio**.
-- **Clareza**: Separação clara entre estágios de configuração (Global, Leitura, Filtro, Escrita).
+- **Fluent API**: Build complex commands by chaining methods in a readable way.
+- **Semantic Order**: The library ensures the correct order of FFmpeg flags (global, input, and output options).
+- **Simple and Complex Filters**: Native support for `-vf`, `-af`, and `-filter_complex` in an organized manner.
+- **Type-Safe**: Avoid common errors by specifying whether a simple filter is for **video** or **audio**.
+- **Clarity**: Clear separation between configuration stages (Global, Read, Filter, Write).
 
-## 📦 Instalação
+## 📦 Installation
 
 ```bash
 go get github.com/Marlliton/ffcmd/ffmpeg
 ```
 
-## 🚀 Uso e Exemplos
+## 🚀 Usage and Examples
 
-A utilização da biblioteca segue a lógica de construção de um comando `ffmpeg`: primeiro as opções globais, depois as entradas, os filtros e, por fim, a saída e suas opções.
+Using the library follows the logic of building an `ffmpeg` command: first global options, then inputs, filters, and finally the output and its options.
 
-### Exemplo 1: Conversão Básica
+### Example 1: Basic Conversion
 
-Converter um arquivo de vídeo para um formato diferente.
-
-```go
-package main
-
-import (
-	"fmt"
-	"github.com/Marlliton/ffcmd/ffmpeg"
-)
-
-func main() {
-	cmd := ffmpeg.New().
-		Override(). // Adiciona a flag global -y para sobrescrever o arquivo de saída
-		Input("input.mp4").
-		Output("output.webm").
-		VideoCodec("libvpx-vp9").
-		AudioCodec("libopus").
-		Build()
-
-	fmt.Println(cmd)
-	// Saída: ffmpeg -y -i input.mp4 -c:v libvpx-vp9 -c:a libopus output.webm
-}
-```
-
-### Exemplo 2: Cortar um Vídeo (Trimming)
-
-É possível usar `Ss` (seek) e `T` (duração) tanto na entrada (para um seek rápido) quanto na saída (para um corte preciso).
+Convert a video file to a different format.
 
 ```go
 package main
 
 import (
-	"fmt"
-	"time"
-	"github.com/Marlliton/ffcmd/ffmpeg"
+ "fmt"
+ "github.com/Marlliton/ffcmd/ffmpeg"
 )
 
 func main() {
-    // Seek rápido na entrada e duração limitada
-	cmd := ffmpeg.New().
-		Ss(1 * time.Minute). // Pula para 1 minuto do início do arquivo de entrada
-		T(30 * time.Second).  // Lê apenas 30 segundos da entrada
-		Input("input.mp4").
-		Output("output.mp4").
-		CopyVideo(). // Copia o stream de vídeo sem recodificar
-		CopyAudio().  // Copia o stream de áudio sem recodificar
-		Build()
+ cmd := ffmpeg.New().
+  Override(). // Adds the global -y flag to overwrite the output file
+  Input("input.mp4").
+  Output("output.webm").
+  VideoCodec("libvpx-vp9").
+  AudioCodec("libopus").
+  Build()
 
-	fmt.Println(cmd)
-	// Saída: ffmpeg -ss 00:01:00.000 -t 00:00:30.000 -i input.mp4 -c:v copy -c:a copy output.mp4
+ fmt.Println(cmd)
+ // Output: ffmpeg -y -i input.mp4 -c:v libvpx-vp9 -c:a libopus output.webm
 }
 ```
 
-### Exemplo 3: Filtros Simples (Vídeo e Áudio)
+### Example 2: Trimming a Video
 
-Aplique filtros a um único stream de vídeo (`-vf`) ou áudio (`-af`).
+You can use `Ss` (seek) and `T` (duration) for both input (for a fast seek) and output (for a precise cut).
 
 ```go
 package main
 
 import (
-	"fmt"
-	"github.com/Marlliton/ffcmd/ffmpeg"
+ "fmt"
+ "time"
+ "github.com/Marlliton/ffcmd/ffmpeg"
 )
 
 func main() {
-    // Filtro de vídeo para redimensionar e inverter horizontalmente
-	videoCmd := ffmpeg.New().
-		Input("input.mp4").
-		Filter().
-		Simple(ffmpeg.FilterVideo). // Especifica que é um filtro de vídeo (-vf)
-		Add(ffmpeg.AtomicFilter{Name: "scale", Params: []string{"1280", "-1"}}).
-		Add(ffmpeg.AtomicFilter{Name: "hflip"}).
-		Done().
-		Output("video_filtered.mp4").
-		Build()
+    // Fast seek on input and limited duration
+ cmd := ffmpeg.New().
+  Ss(1 * time.Minute). // Jumps to 1 minute from the start of the input file
+  T(30 * time.Second).  // Reads only 30 seconds of the input
+  Input("input.mp4").
+  Output("output.mp4").
+  CopyVideo(). // Copies the video stream without re-encoding
+  CopyAudio().  // Copies the audio stream without re-encoding
+  Build()
 
-	fmt.Println(videoCmd)
-	// Saída: ffmpeg -i input.mp4 -vf scale=1280:-1,hflip video_filtered.mp4
-
-    // Filtro de áudio para ajustar o volume
-	audioCmd := ffmpeg.New().
-		Input("input.mp4").
-		Filter().
-		Simple(ffmpeg.FilterAudio). // Especifica que é um filtro de áudio (-af)
-		Add(ffmpeg.AtomicFilter{Name: "volume", Params: []string{"0.5"}}).
-		Done().
-		Output("audio_filtered.mp3").
-		Build()
-
-	fmt.Println(audioCmd)
-    // Saída: ffmpeg -i input.mp4 -af volume=0.5 audio_filtered.mp3
+ fmt.Println(cmd)
+ // Output: ffmpeg -ss 00:01:00.000 -t 00:00:30.000 -i input.mp4 -c:v copy -c:a copy output.mp4
 }
 ```
 
-### Exemplo 4: Filtro Complexo (Cenário Real)
+### Example 3: Simple Filters (Video and Audio)
 
-Um exemplo mais avançado: cortar um vídeo, sobrepor uma marca d'água, acelerar o áudio e re-codificar com presets específicos.
+Apply filters to a single video (`-vf`) or audio (`-af`) stream.
 
 ```go
 package main
 
 import (
-	"fmt"
-	"time"
-	"github.com/Marlliton/ffcmd/ffmpeg"
+ "fmt"
+ "github.com/Marlliton/ffcmd/ffmpeg"
 )
 
 func main() {
-	cmd := ffmpeg.New().
-		Override().
-		Input("input.mp4"). // Entrada de vídeo principal
-		Input("logo.png").   // Entrada da imagem para a marca d'água
-		Filter().
-		Complex(). // Inicia um -filter_complex
-		Chaing(
-			[]string{"0:v"}, // Pega o vídeo da primeira entrada
-			ffmpeg.AtomicFilter{Name: "scale", Params: []string{"1920", "-1"}},
-			"scaled", // Nomeia a saída para uso posterior
-		).
-		Chaing(
-			[]string{"scaled", "1:v"}, // Pega o vídeo redimensionado e a imagem da segunda entrada
-			ffmpeg.AtomicFilter{Name: "overlay", Params: []string{"W-w-10", "10"}},
-			"video_out", // Nomeia a saída de vídeo final
-		).
-		Chaing(
-			[]string{"0:a"}, // Pega o áudio da primeira entrada
-			ffmpeg.AtomicFilter{Name: "atempo", Params: []string{"1.5"}},
-			"audio_out", // Nomeia a saída de áudio final
-		).
-		Done().
-		Map("video_out"). // Mapeia a saída de vídeo do filtro complexo
-		Map("audio_out"). // Mapeia a saída de áudio do filtro complexo
-		VideoCodec("libx264").
-		AudioCodec("aac").
-		Preset("fast").
-		CRF(23).
-		Output("final_video.mp4").
-		Build()
+    // Video filter to resize and flip horizontally
+ videoCmd := ffmpeg.New().
+  Input("input.mp4").
+  Filter().
+  Simple(ffmpeg.FilterVideo). // Specifies it's a video filter (-vf)
+  Add(ffmpeg.AtomicFilter{Name: "scale", Params: []string{"1280", "-1"}}).
+  Add(ffmpeg.AtomicFilter{Name: "hflip"}).
+  Done().
+  Output("video_filtered.mp4").
+  Build()
 
-	fmt.Println(cmd)
-	/*
-	   Saída: ffmpeg -y -i input.mp4 -i logo.png -filter_complex [0:v]scale=1920:-1[scaled];[scaled][1:v]overlay=W-w-10:10[video_out];[0:a]atempo=1.5[audio_out] -map [video_out] -map [audio_out] -c:v libx264 -c:a aac -preset fast -crf 23 final_video.mp4
-	*/
+ fmt.Println(videoCmd)
+ // Output: ffmpeg -i input.mp4 -vf scale=1280:-1,hflip video_filtered.mp4
+
+    // Audio filter to adjust the volume
+ audioCmd := ffmpeg.New().
+  Input("input.mp4").
+  Filter().
+  Simple(ffmpeg.FilterAudio). // Specifies it's an audio filter (-af)
+  Add(ffmpeg.AtomicFilter{Name: "volume", Params: []string{"0.5"}}).
+  Done().
+  Output("audio_filtered.mp3").
+  Build()
+
+ fmt.Println(audioCmd)
+    // Output: ffmpeg -i input.mp4 -af volume=0.5 audio_filtered.mp3
 }
 ```
 
-## 📖 Visão Geral da API
+### Example 4: Complex Filter (Real-world Scenario)
 
-O builder é dividido em estágios para garantir uma construção lógica e semântica do comando.
+A more advanced example: trimming a video, overlaying a watermark, speeding up the audio, and re-encoding with specific presets.
 
-1.  **`GlobalStage`**: Ponto de entrada (`New()`). Permite definir opções globais como `-y` (sobrescrever).
-2.  **`ReadStage`**: Define as entradas (`Input()`) e suas opções, como `-ss` (seek) ou `-t` (duração).
-3.  **`FilterStage`**: Permite a criação de filtros simples (`Simple()`) ou complexos (`Complex()`).
-4.  **`WriteStage`**: Define a saída (`Output()`) e todas as suas opções, como codecs (`-c:v`), presets (`-preset`), CRF, etc. É o estágio final antes de construir o comando com `Build()`.
+```go
+package main
+
+import (
+ "fmt"
+ "time"
+ "github.com/Marlliton/ffcmd/ffmpeg"
+)
+
+func main() {
+ cmd := ffmpeg.New().
+  Override().
+  Input("input.mp4"). // Main video input
+  Input("logo.png").   // Image input for the watermark
+  Filter().
+  Complex(). // Starts a -filter_complex
+  Chaing(
+   []string{"0:v"}, // Takes the video from the first input
+   ffmpeg.AtomicFilter{Name: "scale", Params: []string{"1920", "-1"}},
+   "scaled", // Names the output for later use
+  ).
+  Chaing(
+   []string{"scaled", "1:v"}, // Takes the resized video and the image from the second input
+   ffmpeg.AtomicFilter{Name: "overlay", Params: []string{"W-w-10", "10"}},
+   "video_out", // Names the final video output
+  ).
+  Chaing(
+   []string{"0:a"}, // Takes the audio from the first input
+   ffmpeg.AtomicFilter{Name: "atempo", Params: []string{"1.5"}},
+   "audio_out", // Names the final audio output
+  ).
+  Done().
+  Map("video_out"). // Maps the video output from the complex filter
+  Map("audio_out"). // Maps the audio output from the complex filter
+  VideoCodec("libx264").
+  AudioCodec("aac").
+  Preset("fast").
+  CRF(23).
+  Output("final_video.mp4").
+  Build()
+
+ fmt.Println(cmd)
+ /*
+    Output: ffmpeg -y -i input.mp4 -i logo.png -filter_complex [0:v]scale=1920:-1[scaled];[scaled][1:v]overlay=W-w-10:10[video_out];[0:a]atempo=1.5[audio_out] -map [video_out] -map [audio_out] -c:v libx264 -c:a aac -preset fast -crf 23 final_video.mp4
+ */
+}
+```
+
+## 📖 API Overview
+
+The builder is divided into stages to ensure a logical and semantic command construction.
+
+1. **`GlobalStage`**: Entry point (`New()`). Allows setting global options like `-y` (overwrite).
+2. **`ReadStage`**: Defines the inputs (`Input()`) and their options, such as `-ss` (seek) or `-t` (duration).
+3. **`FilterStage`**: Allows the creation of simple (`Simple()`) or complex (`Complex()`) filters.
+4. **`WriteStage`**: Defines the output (`Output()`) and all its options, such as codecs (`-c:v`), presets (`-preset`), CRF, etc. It is the final stage before building the command with `Build()`.

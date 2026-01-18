@@ -22,22 +22,22 @@ const (
 	FilterAudio SimpleFilterType = "-af"
 )
 
-type Filter interface {
+type filter interface {
 	String() string
 	NeedsComplex() bool
 }
-type FilterStage interface {
-	Simple(t SimpleFilterType) SimpleFilter
-	Complex() ComplexFilter
+type filterStage interface {
+	Simple(t SimpleFilterType) simpleFilter
+	Complex() complexFilter
 }
 
-type SimpleFilter interface {
-	Add(filter AtomicFilter) SimpleFilter
+type simpleFilter interface {
+	Add(filter AtomicFilter) simpleFilter
 	Done() WriteStage
 }
 
-type ComplexFilter interface {
-	Chaing(in []string, filter AtomicFilter, out string) ComplexFilter
+type complexFilter interface {
+	Chaing(in []string, filter AtomicFilter, out string) complexFilter
 	Done() WriteStage
 }
 
@@ -47,16 +47,16 @@ type (
 	complexFilterCtx struct{ b *ffmpegBuilder }
 )
 
-func (c *filterCtx) Simple(t SimpleFilterType) SimpleFilter {
+func (c *filterCtx) Simple(t SimpleFilterType) simpleFilter {
 	c.b.simpleFilterFlag = string(t)
 	return &simpleFilterCtx{c.b}
 }
 
-func (c *filterCtx) Complex() ComplexFilter {
+func (c *filterCtx) Complex() complexFilter {
 	return &complexFilterCtx{c.b}
 }
 
-func (sf *simpleFilterCtx) Add(filter AtomicFilter) SimpleFilter {
+func (sf *simpleFilterCtx) Add(filter AtomicFilter) simpleFilter {
 	sf.b.filters = append(sf.b.filters, filter)
 	return sf
 }
@@ -65,7 +65,7 @@ func (sf *simpleFilterCtx) Done() WriteStage {
 	return &writeCtx{sf.b}
 }
 
-func (cf *complexFilterCtx) Chaing(in []string, filter AtomicFilter, out string) ComplexFilter {
+func (cf *complexFilterCtx) Chaing(in []string, filter AtomicFilter, out string) complexFilter {
 	chain := Chaing{Inputs: in, Filter: filter, Output: out}
 	cf.b.filters = append(cf.b.filters, chain)
 	return cf
@@ -122,7 +122,7 @@ func (c Chaing) NeedsComplex() bool {
 }
 
 type Pipeline struct {
-	Nodes []Filter
+	Nodes []filter
 }
 
 func (p Pipeline) String() string {
