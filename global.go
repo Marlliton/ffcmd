@@ -1,4 +1,4 @@
-package ffmpeg
+package fflow
 
 type globalStage interface {
 	// Override adiciona a flag global -y.

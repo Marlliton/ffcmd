@@ -1,4 +1,4 @@
-package ffmpeg
+package fflow
 
 import (
 	"testing"

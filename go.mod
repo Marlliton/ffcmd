@@ -1,4 +1,4 @@
-module github.com/Marlliton/ffcmd
+module github.com/Marlliton/fflow
 
 go 1.25.5
 
