@@ -111,8 +111,8 @@ func TestFilterElements(t *testing.T) {
 					AtomicFilter{Name: scale, Params: []string{"1280", "-1"}},
 					AtomicFilter{Name: "hflip", Params: []string{}},
 				},
-				expectedStr:  "scale=1280:-1;hflip", // INFO: Pipeline.String() always joins with ';'
-				needsComplex: false,                 // Nodes themselves are not complex
+				expectedStr:  "scale=1280:-1,hflip",
+				needsComplex: false,
 			},
 			{
 				name: "Pipeline including a complex chain",
@@ -150,3 +150,82 @@ func TestFilterElements(t *testing.T) {
 		}
 	})
 }
+
+// func TestFilterStages(t *testing.T) {
+// 	t.Run("filterCtx", func(t *testing.T) {
+// 		b := &ffmpegBuilder{}
+// 		fCtx := filterCtx{b}
+//
+// 		t.Run("Simple returns non-nil SimpleFilter", func(t *testing.T) {
+// 			simpleStage := fCtx.Simple()
+// 			assert.NotNil(t, simpleStage)
+// 			_, ok := simpleStage.(*simpleFilterCtx)
+// 			assert.True(t, ok, "Simple() should return a *simpleFilterCtx")
+// 		})
+// 	})
+//
+// 	t.Run("simpleFilterCtx", func(t *testing.T) {
+// 		b := &ffmpegBuilder{}
+// 		sCtx := simpleFilterCtx{b}
+//
+// 		t.Run("Add appends filter strings to builder", func(t *testing.T) {
+// 			sCtx.Add(AtomicFilter{Name: "scale", Params: []string{"1280", "-1"}})
+// 			sCtx.Add(AtomicFilter{Name: "hflip"})
+//
+// 			expectedFilters := []string{"scale=1280:-1", "hflip"}
+// 			assert.Equal(t, expectedFilters, b.filters)
+// 		})
+//
+// 		t.Run("Done returns non-nil WriteStage", func(t *testing.T) {
+// 			writeStage := sCtx.Done()
+// 			assert.NotNil(t, writeStage)
+// 			_, ok := writeStage.(*writeCtx)
+// 			assert.True(t, ok, "Done() should return a *writeCtx")
+// 		})
+// 	})
+//
+// 	t.Run("complexFilterCtx", func(t *testing.T) {
+// 		// NOTE: As filterCtx.Complex() is not implemented,
+// 		// we are instantiating complexFilterCtx manually for testing.
+// 		b := &ffmpegBuilder{}
+// 		fCtx := filterCtx{b}
+//
+// 		t.Run("Simple returns non-nil SimpleFilter", func(t *testing.T) {
+// 			complexStage := fCtx.Complex()
+// 			assert.NotNil(t, complexStage)
+// 			_, ok := complexStage.(*complexFilterCtx)
+// 			assert.True(t, ok, "Simple() should return a *simpleFilterCtx")
+// 		})
+//
+// 		t.Run("Chaing appends filter strings to builder", func(t *testing.T) {
+// 			cCtx := complexFilterCtx{b}
+// 			cCtx.Chaing(
+// 				[]string{"0:v"},
+// 				AtomicFilter{Name: "scale", Params: []string{"640", "-1"}},
+// 				"out",
+// 			)
+// 			cCtx.Chaing(
+// 				[]string{"1:a"},
+// 				AtomicFilter{Name: "aformat", Params: []string{"fltp"}},
+// 				"",
+// 			)
+//
+// 			// NOTE: The Chaing method wraps each chain in a Pipeline.
+// 			expectedFilters := []string{
+// 				"[0:v]scale=640:-1[out]",
+// 				"[1:a]aformat=fltp",
+// 			}
+// 			assert.Equal(t, expectedFilters, b.filters)
+// 		})
+//
+// 		t.Run("Done returns non-nil WriteStage", func(t *testing.T) {
+// 			b := &ffmpegBuilder{}
+// 			fCtx := filterCtx{b}
+// 			cCtx := fCtx.Complex()
+// 			writeStage := cCtx.Done()
+// 			assert.NotNil(t, writeStage)
+// 			_, ok := writeStage.(*writeCtx)
+// 			assert.True(t, ok, "Done() should return a *writeCtx")
+// 		})
+// 	})
+// }

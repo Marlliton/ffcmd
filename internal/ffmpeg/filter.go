@@ -9,10 +9,57 @@ type Filter interface {
 	String() string
 	NeedsComplex() bool
 }
+type FilterStage interface {
+	Simple() SimpleFilter
+	Complex() ComplexFilter
+}
 
-type FilterStage interface{}
+type SimpleFilter interface {
+	Add(filter AtomicFilter) SimpleFilter
+	Done() WriteStage
+}
 
-type filterCtx struct{ b *ffmpegBuilder }
+type ComplexFilter interface {
+	Chaing(in []string, filter AtomicFilter, out string) ComplexFilter
+	Done() WriteStage
+}
+
+type (
+	filterCtx        struct{ b *ffmpegBuilder }
+	simpleFilterCtx  struct{ b *ffmpegBuilder }
+	complexFilterCtx struct{ b *ffmpegBuilder }
+)
+
+func (c *filterCtx) Simple() SimpleFilter {
+	return &simpleFilterCtx{c.b}
+}
+
+func (c *filterCtx) Complex() ComplexFilter {
+	return &complexFilterCtx{c.b}
+}
+
+func (sf *simpleFilterCtx) Add(filter AtomicFilter) SimpleFilter {
+	p := Pipeline{Nodes: []Filter{filter}}
+
+	sf.b.filters = append(sf.b.filters, p)
+	return sf
+}
+
+func (sf *simpleFilterCtx) Done() WriteStage {
+	return &writeCtx{sf.b}
+}
+
+func (cf *complexFilterCtx) Chaing(in []string, filter AtomicFilter, out string) ComplexFilter {
+	chain := Chaing{Inputs: in, Filter: filter, Output: out}
+	p := Pipeline{Nodes: []Filter{chain}}
+
+	cf.b.filters = append(cf.b.filters, p)
+	return cf
+}
+
+func (cf *complexFilterCtx) Done() WriteStage {
+	return &writeCtx{cf.b}
+}
 
 type AtomicFilter struct {
 	Name   string
@@ -69,7 +116,11 @@ func (p Pipeline) String() string {
 	for _, n := range p.Nodes {
 		parts = append(parts, n.String())
 	}
-	return strings.Join(parts, ";")
+	if p.NeedsComplex() {
+		return strings.Join(parts, ";")
+	}
+
+	return strings.Join(parts, ",")
 }
 
 func (p Pipeline) NeedsComplex() bool {
