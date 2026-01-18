@@ -58,6 +58,11 @@ type WriteStage interface {
 	// CRF sets the constant quality factor for video encoders.
 	CRF(value int) WriteStage
 
+	// Map mapeia a stream de entrada, com a  stream de saída.
+	//
+	// Map connecting input file streams with output file streams.
+	Map(selector string) WriteStage
+
 	// Output define o arquivo de saída.
 	//
 	// Output sets the output file path.
@@ -118,6 +123,11 @@ func (c *writeCtx) CopyAudio() WriteStage {
 
 func (c *writeCtx) CRF(value int) WriteStage {
 	c.b.write = append(c.b.write, "-crf", strconv.Itoa(value))
+	return c
+}
+
+func (c *writeCtx) Map(selector string) WriteStage {
+	c.b.write = append(c.b.write, "-map", selector)
 	return c
 }
 
