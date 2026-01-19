@@ -1,4 +1,4 @@
-// Package ffmpeg fornece um builder fluente para compor comandos FFmpeg.
+// Package fflow fornece um builder fluente para compor comandos FFmpeg.
 package fflow
 
 type StreamType string

@@ -16,12 +16,12 @@ type globalStage interface {
 	// Input adiciona um arquivo de entrada (-i) e transiciona para o ReadStage.
 	//
 	// Input adds an input file (-i) and transitions to ReadStage.
-	Input(path string) ReadStage
+	Input(path string) readStagee
 }
 
 type globalCtx struct{ b *ffmpegBuilder }
 
-func (c *globalCtx) Input(path string) ReadStage {
+func (c *globalCtx) Input(path string) readStagee {
 	read := &readCtx{c.b}
 	read.Input(path)
 	return read

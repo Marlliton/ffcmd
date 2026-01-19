@@ -33,12 +33,12 @@ type filterStage interface {
 
 type simpleFilter interface {
 	Add(filter AtomicFilter) simpleFilter
-	Done() WriteStage
+	Done() writeStage
 }
 
 type complexFilter interface {
 	Chaing(in []string, filter AtomicFilter, out []string) complexFilter
-	Done() WriteStage
+	Done() writeStage
 }
 
 type (
@@ -61,7 +61,7 @@ func (sf *simpleFilterCtx) Add(filter AtomicFilter) simpleFilter {
 	return sf
 }
 
-func (sf *simpleFilterCtx) Done() WriteStage {
+func (sf *simpleFilterCtx) Done() writeStage {
 	return &writeCtx{sf.b}
 }
 
@@ -71,7 +71,7 @@ func (cf *complexFilterCtx) Chaing(in []string, filter AtomicFilter, out []strin
 	return cf
 }
 
-func (cf *complexFilterCtx) Done() WriteStage {
+func (cf *complexFilterCtx) Done() writeStage {
 	return &writeCtx{cf.b}
 }
 

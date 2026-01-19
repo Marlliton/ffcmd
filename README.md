@@ -1,10 +1,10 @@
 [🇧🇷 Português](./README.pt-br.md)
 
-# ffcmd - Fluent FFmpeg Command Builder for Go
+# fflow - Fluent FFmpeg Command Builder for Go
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/Marlliton/ffcmd)](https://goreportcard.com/report/github.com/Marlliton/ffcmd)
 
-`ffcmd` is a Go library that provides a fluent and semantic interface for building `ffmpeg` commands programmatically. Say goodbye to string concatenation and flag ordering errors.
+`fflow` is a Go library that provides a fluent and semantic interface for building `ffmpeg` commands programmatically. Say goodbye to string concatenation and flag ordering errors.
 
 ## ✨ Features
 
@@ -173,6 +173,64 @@ func main() {
 }
 ```
 
+### Example 5: Complex Filter Graph
+
+A more advanced example that demonstrates a complex filter graph with multiple inputs, branches, and overlays.
+
+```go
+package main
+
+import (
+"fmt"
+
+"github.com/Marlliton/fflow"
+)
+
+func main() {
+cmd := fflow.New().
+Override().
+Input("input.mkv").
+Input("train.jpg").
+Filter().
+Complex().
+// Split ORIGINAL video into two branches
+Chaing([]string{"0:v"}, fflow.AtomicFilter{Name: "split", Params: []string{"2"}}, []string{"v_main", "v_blur"}).
+// Blur background branch
+Chaing([]string{"v_blur"}, fflow.AtomicFilter{Name: "boxblur", Params: []string{"20:1"}}, []string{"v_bg"}).
+// Scale ONLY the foreground
+Chaing([]string{"v_main"}, fflow.AtomicFilter{Name: "scale", Params: []string{"960", "-1"}}, []string{"v_fg"}).
+// Overlay foreground centered on blurred background
+Chaing([]string{"v_bg", "v_fg"}, fflow.AtomicFilter{Name: "overlay", Params: []string{"(W-w)/2", "(H-h)/2"}}, []string{"v_base"}).
+// Scale logo
+Chaing([]string{"1:v"}, fflow.AtomicFilter{Name: "scale", Params: []string{"200", "-1"}}, []string{"logo"}).
+// Overlay logo
+Chaing([]string{"v_base", "logo"}, fflow.AtomicFilter{Name: "overlay", Params: []string{"W-w-20", "H-h-20"}}, []string{"v_logo"}).
+// Draw text
+Chaing([]string{"v_logo"}, fflow.AtomicFilter{Name: "drawtext", Params: []string{
+"text=Builder Test",
+"x=(w-text_w)/2",
+"y=h-80",
+"fontsize=42",
+"fontcolor=white",
+}}, []string{"v"}).
+// Audio mix (fan-in)
+Chaing([]string{"0:a", "0:a"}, fflow.AtomicFilter{Name: "amix", Params: []string{"inputs=2"}}, []string{"a"}).
+Done(). // filter end
+Map("v").
+Map("a").
+VideoCodec("libx264").
+Preset("medium").
+CRF(23).
+AudioCodec("aac").
+Raw("-b:a 192k").
+Raw("-movflags +faststart").
+Output("final_video.mp4").
+Build()
+
+fmt.Println(cmd)
+}
+```
+
 ## 📖 API Overview
 
 The builder is divided into stages to ensure a logical and semantic command construction.
@@ -180,4 +238,21 @@ The builder is divided into stages to ensure a logical and semantic command cons
 1. **`GlobalStage`**: Entry point (`New()`). Allows setting global options like `-y` (overwrite).
 2. **`ReadStage`**: Defines the inputs (`Input()`) and their options, such as `-ss` (seek) or `-t` (duration).
 3. **`FilterStage`**: Allows the creation of simple (`Simple()`) or complex (`Complex()`) filters.
-4. **`WriteStage`**: Defines the output (`Output()`) and all its options, such as codecs (`-c:v`), presets (`-preset`), CRF, etc. It is the final stage before building the command with `Build()`.
+4. **`WriteStage`**: Defines the output (`Output()`) and all its options, such as codecs (`-c:v`), presets (`-preset`), CRF, etc. It is the final stage before building the command with `Build()`).
+
+## File Breakdown
+
+*   **`ffmpeg.go`**: The entry point of the `fflow` package. It initializes the FFmpeg command builder and defines core types like `StreamType`.
+*   **`global.go`**: Manages global FFmpeg command options such as `-y` (override output files without asking) and custom raw arguments before input specification.
+*   **`read.go`**: Handles all input-related FFmpeg arguments, including adding input files (`-i`) and managing input seek and duration parameters (`-ss`, `-to`, `-t`).
+*   **`filter.go`**: Contains the logic for building FFmpeg filter graphs, supporting both simple filters (like `-vf` and `-af`) and complex filter chains using `-filter_complex`.
+*   **`write.go`**: Deals with output settings, including output file specification, video/audio/subtitle codecs, quality parameters (CRF), encoding presets, and stream mapping. This file also includes the `Build()` method, which constructs the final FFmpeg command string.
+*   **`utils.go`**: Provides helper functions, such as `fmtDuration` for formatting `time.Duration` objects into FFmpeg-compatible time strings.
+
+## Testing Files
+
+*   **`ffmpeg_test.go`**: Contains tests for the basic initialization and fluent nature of the FFmpeg builder.
+*   **`global_test.go`**: Tests the functionality of global FFmpeg options.
+*   **`read_test.go`**: Tests the correct application of input-related options and handling of multiple inputs.
+*   **`filter_test.go`**: Ensures the proper construction of filter strings for atomic filters, complex chains, and pipelines.
+*   **`write_test.go`**: Verifies the correct generation of FFmpeg command arguments for output settings, codecs, quality, and complex filter integration.

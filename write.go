@@ -7,82 +7,82 @@ import (
 	"time"
 )
 
-type WriteStage interface {
+type writeStage interface {
 	// Ss adiciona a flag -ss após os inputs (-i), realizando um seek preciso no output.
 	//
 	// Ss adds the -ss flag after the inputs (-i), performing a precise seek on the output.
-	Ss(time.Duration) WriteStage
+	Ss(time.Duration) writeStage
 
 	// To adiciona a flag -to após os inputs (-i), definindo o tempo final absoluto do output.
 	//
 	// To adds the -to flag after the inputs (-i), defining the absolute end time of the output.
-	To(time.Duration) WriteStage
+	To(time.Duration) writeStage
 
 	// T adiciona a flag -t após os inputs (-i), limitando a duração do output.
 	//
 	// T adds the -t flag after the inputs (-i), limiting the output duration.
-	T(time.Duration) WriteStage
+	T(time.Duration) writeStage
 
 	// VideoCodec define o codec de vídeo do output (-c:v).
 	//
 	// VideoCodec sets the output video codec (-c:v).
-	VideoCodec(codec string) WriteStage
+	VideoCodec(codec string) writeStage
 
 	// AudioCodec define o codec de áudio do output (-c:a).
 	//
 	// AudioCodec sets the output audio codec (-c:a).
-	AudioCodec(codec string) WriteStage
+	AudioCodec(codec string) writeStage
 
 	// SubtitleCodec define o codec de legenda do output (-c:s).
 	//
 	// SubtitleCodec sets the output subtitle codec (-c:s).
-	SubtitleCodec(codec string) WriteStage
+	SubtitleCodec(codec string) writeStage
 
 	// CopyVideo copia o stream de vídeo sem recodificar (-c:v copy).
 	//
 	// CopyVideo copies the video stream without re-encoding (-c:v copy).
-	CopyVideo() WriteStage
+	CopyVideo() writeStage
 
 	// CopyAudio copia o stream de áudio sem recodificar (-c:a copy).
 	//
 	// CopyAudio copies the audio stream without re-encoding (-c:a copy).
-	CopyAudio() WriteStage
+	CopyAudio() writeStage
 
 	// CodecFor define o codec de um stream específico do output (-c:<stream>:<index>).
 	//
 	// CodecFor sets the codec for a specific output stream (-c:<stream>:<index>).
-	CodecFor(stream StreamType, index int, codec string) WriteStage
+	CodecFor(stream StreamType, index int, codec string) writeStage
 
 	// CRF define o fator de qualidade constante para encoders de vídeo.
 	//
 	// CRF sets the constant quality factor for video encoders.
-	CRF(value int) WriteStage
+	CRF(value int) writeStage
 
 	// Map mapeia streams de entrada para streams de saída (-map).
 	// Exemplo: Map("[out]").
 	//
 	// Map maps input streams to output streams (-map).
 	// Example: Map("[out]").
-	Map(selector string) WriteStage
+	Map(selector string) writeStage
 
 	// Raw adiciona um argumento bruto ao comando FFmpeg.
 	// Útil para opções ainda não abstraídas pelo builder.
 	//
 	// Raw adds a raw argument to the FFmpeg command.
 	// Useful for options not yet abstracted by the builder.
-	Raw(value string) WriteStage
+	Raw(value string) writeStage
 
 	// Preset adiciona a flag -preset ao encoder de vídeo na saída.
 	// Controla o trade-off entre velocidade de codificação e eficiência de compressão.
 	//
 	// Preset adds the -preset flag to the video encoder at the output stage.
 	// It controls the trade-off between encoding speed and compression efficiency.
-	Preset(value string) WriteStage
+	Preset(value string) writeStage
 
 	// Output define o arquivo de saída.
 	//
 	// Output sets the output file path.
-	Output(path string) WriteStage
+	Output(path string) writeStage
 
 	// Build monta o comando FFmpeg final respeitando a ordem semântica.
 	//
@@ -92,72 +92,72 @@ type WriteStage interface {
 
 type writeCtx struct{ b *ffmpegBuilder }
 
-func (c *writeCtx) T(d time.Duration) WriteStage {
+func (c *writeCtx) T(d time.Duration) writeStage {
 	c.b.write = append(c.b.write, "-t", fmtDuration(d))
 	return c
 }
 
-func (c *writeCtx) Ss(d time.Duration) WriteStage {
+func (c *writeCtx) Ss(d time.Duration) writeStage {
 	c.b.write = append(c.b.write, "-ss", fmtDuration(d))
 	return c
 }
 
-func (c *writeCtx) To(d time.Duration) WriteStage {
+func (c *writeCtx) To(d time.Duration) writeStage {
 	c.b.write = append(c.b.write, "-to", fmtDuration(d))
 	return c
 }
 
-func (c *writeCtx) VideoCodec(codec string) WriteStage {
+func (c *writeCtx) VideoCodec(codec string) writeStage {
 	c.b.write = append(c.b.write, "-c:v", codec)
 	return c
 }
 
-func (c *writeCtx) AudioCodec(codec string) WriteStage {
+func (c *writeCtx) AudioCodec(codec string) writeStage {
 	c.b.write = append(c.b.write, "-c:a", codec)
 	return c
 }
 
-func (c *writeCtx) SubtitleCodec(codec string) WriteStage {
+func (c *writeCtx) SubtitleCodec(codec string) writeStage {
 	c.b.write = append(c.b.write, "-c:s", codec)
 	return c
 }
 
-func (c *writeCtx) CodecFor(stream StreamType, index int, codec string) WriteStage {
+func (c *writeCtx) CodecFor(stream StreamType, index int, codec string) writeStage {
 	c.b.write = append(c.b.write, fmt.Sprintf("-c:%s:%d", stream, index), codec)
 	return c
 }
 
-func (c *writeCtx) CopyVideo() WriteStage {
+func (c *writeCtx) CopyVideo() writeStage {
 	c.b.write = append(c.b.write, "-c:v", "copy")
 	return c
 }
 
-func (c *writeCtx) CopyAudio() WriteStage {
+func (c *writeCtx) CopyAudio() writeStage {
 	c.b.write = append(c.b.write, "-c:a", "copy")
 	return c
 }
 
-func (c *writeCtx) CRF(value int) WriteStage {
+func (c *writeCtx) CRF(value int) writeStage {
 	c.b.write = append(c.b.write, "-crf", strconv.Itoa(value))
 	return c
 }
 
-func (c *writeCtx) Preset(value string) WriteStage {
+func (c *writeCtx) Preset(value string) writeStage {
 	c.b.write = append(c.b.write, "-preset", value)
 	return c
 }
 
-func (c *writeCtx) Map(selector string) WriteStage {
+func (c *writeCtx) Map(selector string) writeStage {
 	c.b.write = append(c.b.write, "-map", fmt.Sprintf("[%s]", selector))
 	return c
 }
 
-func (c *writeCtx) Raw(value string) WriteStage {
+func (c *writeCtx) Raw(value string) writeStage {
 	c.b.write = append(c.b.write, value)
 	return c
 }
 
-func (c *writeCtx) Output(path string) WriteStage {
+func (c *writeCtx) Output(path string) writeStage {
 	c.b.output = path
 	return c
 }

@@ -9,7 +9,7 @@ import (
 
 type testCase struct {
 	name     string
-	builder  WriteStage
+	builder  writeStage
 	expected string
 }
 
