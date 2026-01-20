@@ -38,7 +38,7 @@ type Progress struct {
 	FPS     float64
 	Bitrate string
 	OutTime time.Duration
-	Speed   string
+	Speed   float64
 }
 
 type commandCtx struct{ b *ffmpegBuilder }
@@ -124,7 +124,8 @@ func (c commandCtx) monitorProgress(stderr io.ReadCloser, pch chan Progress) {
 			prog.OutTime = d
 
 		case "speed":
-			fmt.Sscanf(value, "%s", &prog.Speed)
+			s := strings.TrimSuffix(value, "x")
+			fmt.Sscanf(s, "%f", &prog.Speed)
 
 		case "progress":
 			pch <- prog
