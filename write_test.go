@@ -78,24 +78,24 @@ func TestWriteStage(t *testing.T) {
 				name: "Duração de escrita (depois do -i)",
 				builder: New().
 					Input("movie.mkv").
-					Output("out.mkv").
-					T(22 * time.Second),
+					T(22 * time.Second).
+					Output("out.mkv"),
 				expected: "ffmpeg -i movie.mkv -t 00:00:22.000 out.mkv",
 			},
 			{
 				name: "seek, procura tempo de vídeo com -ss (depois do -i)",
 				builder: New().
 					Input("movie.mkv").
-					Output("out.mkv").
-					Ss(22 * time.Second),
+					Ss(22 * time.Second).
+					Output("out.mkv"),
 				expected: "ffmpeg -i movie.mkv -ss 00:00:22.000 out.mkv",
 			},
 			{
 				name: "Define tempo final absoluto do vídeo (depois do -i)",
 				builder: New().
 					Input("movie.mkv").
-					Output("out.mkv").
-					To(52 * time.Second),
+					To(52 * time.Second).
+					Output("out.mkv"),
 				expected: "ffmpeg -i movie.mkv -to 00:00:52.000 out.mkv",
 			},
 		})
@@ -169,8 +169,8 @@ func TestWriteStage(t *testing.T) {
 		t.Run("Real-world complex filter", func(t *testing.T) {
 			builder := New().
 				Override().
-				Input("input.mp4").
 				Ss(10*time.Second).
+				Input("input.mp4").
 				Input("logo.png").
 				Filter().
 				Complex().

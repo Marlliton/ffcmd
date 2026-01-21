@@ -13,24 +13,24 @@ func TestReadStage(t *testing.T) {
 			{
 				name: "Duração de leitura (antes do -i)",
 				builder: New().
-					Input("movie.mkv").
 					T(30 * time.Second).
+					Input("movie.mkv").
 					Output("out.mkv"),
 				expected: "ffmpeg -t 00:00:30.000 -i movie.mkv out.mkv",
 			},
 			{
 				name: "seek, procura tempo de vídeo com -ss (antes do -i)",
 				builder: New().
-					Input("movie.mkv").
 					Ss(22 * time.Second).
+					Input("movie.mkv").
 					Output("out.mkv"),
 				expected: "ffmpeg -ss 00:00:22.000 -i movie.mkv out.mkv",
 			},
 			{
 				name: "Define tempo final absoluto do vídeo (antes do -i)",
 				builder: New().
-					Input("movie.mkv").
 					To(52 * time.Second).
+					Input("movie.mkv").
 					Output("out.mkv"),
 				expected: "ffmpeg -to 00:00:52.000 -i movie.mkv out.mkv",
 			},

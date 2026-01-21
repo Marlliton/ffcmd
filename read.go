@@ -3,20 +3,20 @@ package fflow
 import "time"
 
 type readStagee interface {
-	// Ss adiciona a flag -ss antes do -i, realizando um seek rápido na entrada.
+	// Ss adiciona a flag -ss após os inputs (-i), realizando um seek preciso no output.
 	//
-	// Ss adds the -ss flag before -i, performing a fast seek on the input.
-	Ss(d time.Duration) readStagee
+	// Ss adds the -ss flag after the inputs (-i), performing a precise seek on the output.
+	Ss(time.Duration) readStagee
 
-	// To adiciona a flag -to antes do -i, definindo o tempo final absoluto da leitura.
+	// To adiciona a flag -to após os inputs (-i), definindo o tempo final absoluto do output.
 	//
-	// To adds the -to flag before -i, defining the absolute end time of the input read.
-	To(d time.Duration) readStagee
+	// To adds the -to flag after the inputs (-i), defining the absolute end time of the output.
+	To(time.Duration) readStagee
 
-	// T adiciona a flag -t antes do -i, limitando quanto da entrada será lida.
+	// T adiciona a flag -t após os inputs (-i), limitando a duração do output.
 	//
-	// T adds the -t flag before -i, limiting how much of the input is read.
-	T(d time.Duration) readStagee
+	// T adds the -t flag after the inputs (-i), limiting the output duration.
+	T(time.Duration) readStagee
 
 	// Input adiciona um arquivo de entrada (-i).
 	//
@@ -37,17 +37,17 @@ type readStagee interface {
 type readCtx struct{ b *ffmpegBuilder }
 
 func (c *readCtx) T(d time.Duration) readStagee {
-	c.b.read = append([]string{"-t", fmtDuration(d)}, c.b.read...)
+	c.b.read = append(c.b.read, "-t", fmtDuration(d))
 	return c
 }
 
 func (c *readCtx) Ss(d time.Duration) readStagee {
-	c.b.read = append([]string{"-ss", fmtDuration(d)}, c.b.read...)
+	c.b.read = append(c.b.read, "-ss", fmtDuration(d))
 	return c
 }
 
 func (c *readCtx) To(d time.Duration) readStagee {
-	c.b.read = append([]string{"-to", fmtDuration(d)}, c.b.read...)
+	c.b.read = append(c.b.read, "-to", fmtDuration(d))
 	return c
 }
 

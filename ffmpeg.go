@@ -10,7 +10,7 @@ const (
 )
 
 type ffmpegBuilder struct {
-	global           []string
+	beforeRead       []string
 	read             []string
 	write            []string
 	filters          []filter
@@ -25,8 +25,8 @@ type ffmpegBuilder struct {
 // New starts a new FFmpeg command builder, returning a GlobalStage.
 // This is the entry point for building any FFmpeg command, allowing the configuration of global options
 // before specifying inputs.
-func New() *globalCtx {
-	return &globalCtx{
-		b: &ffmpegBuilder{global: []string{}},
+func New() *beforeReadCtx {
+	return &beforeReadCtx{
+		b: &ffmpegBuilder{beforeRead: []string{}},
 	}
 }

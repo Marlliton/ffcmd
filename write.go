@@ -4,25 +4,9 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"time"
 )
 
 type writeStage interface {
-	// Ss adiciona a flag -ss após os inputs (-i), realizando um seek preciso no output.
-	//
-	// Ss adds the -ss flag after the inputs (-i), performing a precise seek on the output.
-	Ss(time.Duration) writeStage
-
-	// To adiciona a flag -to após os inputs (-i), definindo o tempo final absoluto do output.
-	//
-	// To adds the -to flag after the inputs (-i), defining the absolute end time of the output.
-	To(time.Duration) writeStage
-
-	// T adiciona a flag -t após os inputs (-i), limitando a duração do output.
-	//
-	// T adds the -t flag after the inputs (-i), limiting the output duration.
-	T(time.Duration) writeStage
-
 	// VideoCodec define o codec de vídeo do output (-c:v).
 	//
 	// VideoCodec sets the output video codec (-c:v).
@@ -115,21 +99,6 @@ type writeStage interface {
 
 type writeCtx struct{ b *ffmpegBuilder }
 
-func (c *writeCtx) T(d time.Duration) writeStage {
-	c.b.write = append(c.b.write, "-t", fmtDuration(d))
-	return c
-}
-
-func (c *writeCtx) Ss(d time.Duration) writeStage {
-	c.b.write = append(c.b.write, "-ss", fmtDuration(d))
-	return c
-}
-
-func (c *writeCtx) To(d time.Duration) writeStage {
-	c.b.write = append(c.b.write, "-to", fmtDuration(d))
-	return c
-}
-
 func (c *writeCtx) VideoCodec(codec string) writeStage {
 	c.b.write = append(c.b.write, "-c:v", codec)
 	return c
@@ -188,7 +157,7 @@ func (c *writeCtx) Output(path string) writeStage {
 func (c *writeCtx) Args() []string {
 	var args []string
 
-	args = append(args, c.b.global...)
+	args = append(args, c.b.beforeRead...)
 	args = append(args, c.b.read...)
 	if len(c.b.filters) > 0 {
 		pipeline := Pipeline{Nodes: c.b.filters}
